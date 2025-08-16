@@ -11,9 +11,14 @@ class ItemBase(BaseModel):
 class CreateItem(ItemBase):
     pass
 
+class UpdateItem(BaseModel):
+    name: str | None = None
+    price: float | None = None
+    description: str | None = None
+
 class Item(ItemBase):
     id: int
     date_added: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
