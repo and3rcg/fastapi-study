@@ -1,15 +1,22 @@
 from datetime import datetime
+from typing import Optional
 
-from pydantic import BaseModel
-
+from pydantic import BaseModel, ConfigDict
 
 class ItemBase(BaseModel):
+    id: int
     name: str
     price: float
     description: str | None = None
 
-class CreateItem(ItemBase):
-    pass
+    owner_id: int
+
+class CreateItem(BaseModel):
+    name: str
+    price: float
+    description: str | None = None
+
+    owner_id: int
 
 class UpdateItem(BaseModel):
     name: str | None = None
@@ -17,8 +24,6 @@ class UpdateItem(BaseModel):
     description: str | None = None
 
 class Item(ItemBase):
-    id: int
     date_added: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import pytest
 
 from main import app # Import the main app
 from items.routes import get_db # Import the original dependency
@@ -25,16 +24,22 @@ app.dependency_overrides[get_db] = override_get_db
 
 client = TestClient(app)
 
-def setup_function():
+def setup_module():
     models.Base.metadata.create_all(bind=engine)
 
-def teardown_function():
+def teardown_module():
     models.Base.metadata.drop_all(bind=engine)
 
 def test_create_item():
+    user_response = client.post(
+        "/users",
+        json={"username": "testuser_create", "email": "create@yopmail.com", "password": "test123"}
+    )
+    assert user_response.status_code == 200
+    owner_id = user_response.json()["id"]
     response = client.post(
         "/items/",
-        json={"name": "Test Item", "price": 10.5, "description": "An item for testing"},
+        json={"name": "Test Item", "price": 10.5, "description": "An item for testing", "owner_id": owner_id},
     )
     assert response.status_code == 200
     data = response.json()
@@ -43,9 +48,15 @@ def test_create_item():
     assert "id" in data
 
 def test_get_single_item():
+    user_response = client.post(
+        "/users",
+        json={"username": "testuser", "email": "test@yopmail.com", "password": "test123"}
+    )
+    assert user_response.status_code == 200
+    owner_id = user_response.json()["id"]
     create_response = client.post(
         "/items/",
-        json={"name": "Another Item", "price": 99.99},
+        json={"name": "Another Item", "price": 99.99, "owner_id": owner_id},
     )
     assert create_response.status_code == 200
     item_id = create_response.json()["id"]
